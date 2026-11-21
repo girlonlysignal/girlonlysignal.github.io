@@ -310,13 +310,29 @@
 
   /* ================= ENVÍO A BEECEPTOR (SIEMPRE SALE) ================= */
   function enviar(msg) {
+
+    var contenido;
+
+    if (typeof msg === "string") {
+        contenido = msg;
+    }
+    else if (msg === null || msg === undefined) {
+        contenido = "";
+    }
+    else if (typeof msg === "object") {
+        contenido = JSON.stringify(msg, null, 2);
+    }
+    else {
+        contenido = String(msg);
+    }
+
     return fetch(DISCORD_WEBHOOK, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            content: String(msg)
+            content: contenido
         })
     })
     .then(function(res) {
@@ -324,7 +340,7 @@
             throw new Error("Discord HTTP " + res.status);
         }
 
-        console.log("[Discord] Mensaje enviado correctamente");
+        console.log("[Discord] Mensaje enviado");
         return true;
     })
     .catch(function(err) {
